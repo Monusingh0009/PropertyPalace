@@ -19,29 +19,55 @@ function ListingMapView({type}) {
 
     useEffect(()=>{
         getLatestListing();
-    },[])
+    },[bedCount, bathCount, parkingCount, homeType, type])
 
-    const getLatestListing=async()=>{
-        const {data,error}=await supabase
-        .from('listing')
-        .select(`*,listingImages(
-            url,
-            listing_id
-        )`)
-        .eq('active',true)
-        .eq('type',type)
-        .order('id',{ascending:false})
+    // const getLatestListing=async()=>{
+    //     const {data,error}=await supabase
+    //     .from('listing')
+    //     .select(`*,listingImages(
+    //         url,
+    //         listing_id
+    //     )`)
+    //     .eq('active',true)
+    //     .eq('type',type)
+    //     .order('id',{ascending:false})
 
-        if(data)
-        {
-            setListing(data);
-        }
-        if(error)
-        {
-            toast('Server Side Error')
-        }
-    }
+    //     if(data)
+    //     {
+    //         setListing(data);
+    //     }
+    //     if(error)
+    //     {
+    //         toast('Server Side Error')
+    //     }
+    // }
+const getLatestListing = async () => {
+  let query = supabase
+    .from("listing")
+    .select(`*, listingImages(
+        url,
+        listing_id
+      )`)
+    .eq("active", true)
+    .eq("type", type)
+    .gte("bedroom", bedCount)
+    .gte("bathroom", bathCount)
+    .gte("parking", parkingCount)
+    .order("id", { ascending: false });
 
+  if (homeType) {
+    query = query.eq("propertyType", homeType);
+  }
+
+  const { data, error } = await query;
+
+  if (data) {
+    setListing(data);
+  }
+  if (error) {
+    toast("Server Side Error");
+  }
+};
     const handleSearchClick=async()=>{
         console.log(searchedAddress);
         const searchTerm=searchedAddress?.value?.structured_formatting?.main_text
